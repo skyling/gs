@@ -2,3 +2,4 @@
 *.exe
 gs
 gs.*
+/vendor/*
