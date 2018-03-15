@@ -3,3 +3,4 @@
 gs
 gs.*
 /vendor/*
+!/vendor/vendor.json

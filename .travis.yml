@@ -4,7 +4,34 @@ go:
   - tip
 
 before_install:
-  go get -u github.com/kardianos/govendor # 安装依赖
+  - go get -u github.com/kardianos/govendor # 安装依赖
+  - govendor sync
 
 script:
-  go build 
+  - pwd && ls -l
+  - env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-amd64.tar.gz gs
+  - env GOARCH=386 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-x86.tar.gz gs
+  - env GOARCH=arm GOARM=5 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-armv5.tar.gz gs
+  - env GOARCH=arm GOARM=6 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-armv6.tar.gz gs
+  - env GOARCH=arm GOARM=7 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-armv7.tar.gz gs
+  - env GOARCH=arm64 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-arm64.tar.gz gs
+  - env GOARCH=ppc64 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-ppc64.tar.gz gs
+  - env GOARCH=ppc64le GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-ppc64le.tar.gz gs
+  - env GOARCH=mips64 GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-mips64.tar.gz gs
+  - env GOARCH=mips64le GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-mips64le.tar.gz gs
+  - env GOARCH=mips GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-mips.tar.gz gs
+  - env GOARCH=mipsle GOOS=linux go build -ldflags="-s -w"  && tar czvf gs-linux-mipsle.tar.gz gs
+  - env GOARCH=amd64 GOOS=darwin go build  && tar czvf gs-darwin-amd64.tar.gz gs
+  - env GOARCH=amd64 GOOS=windows go build  && tar czvf gs-windows-amd64.tar.gz gs.exe
+  - env GOARCH=386 GOOS=windows go build  && tar czvf gs-windows-x86.tar.gz gs.exe
+  - env GOARCH=amd64 GOOS=freebsd go build  && tar czvf gs-freebsd-amd64.tar.gz gs
+  - env GOARCH=386 GOOS=freebsd go build  && tar czvf gs-freebsd-x86.tar.gz gs
+  - env GOARCH=arm GOOS=freebsd go build  && tar czvf gs-freebsd-arm.tar.gz gs
+  - env GOARCH=amd64 GOOS=openbsd go build  && tar czvf gs-openbsd-amd64.tar.gz gs
+  - env GOARCH=386 GOOS=openbsd go build  && tar czvf gs-openbsd-x86.tar.gz gs
+  - env GOARCH=amd64 GOOS=netbsd go build  && tar czvf gs-netbsd-amd64.tar.gz gs
+  - env GOARCH=386 GOOS=netbsd go build  && tar czvf gs-netbsd-x86.tar.gz gs
+  - env GOARCH=arm GOOS=netbsd go build  && tar czvf gs-netbsd-arm.tar.gz gs
+  - env GOARCH=amd64 GOOS=dragonfly go build  && tar czvf gs-dragonflybsd-amd64.tar.gz gs
+  - env GOARCH=amd64 GOOS=solaris go build  && tar czvf gs-solaris-amd64.tar.gz gs
+  - ls -l
