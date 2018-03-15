@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"gs/alibaba"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/skyling/gs/alibaba"
 )
 
 var (
