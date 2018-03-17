@@ -3,9 +3,9 @@ package alibaba
 import (
 	"fmt"
 	"image"
-	_ "image/gif"
+	_ "image/gif" // 图片处理
 	"image/jpeg"
-	_ "image/png"
+	_ "image/png" // 图片处理
 	"io"
 	"log"
 	"net/http"
@@ -106,11 +106,26 @@ func (i *Image) SaveImage(key, url string) {
 		os.Remove(path)
 	} else {
 		if i.IsDetail {
-			i.ScaleImage(path, 960)
+			i.ScaleImage(path, 960) // 详情图960
+		} else if c.Width < 800 {
+			i.ScaleImage(path, 800) // 主图小于800 的
 		}
 		fmt.Printf("%s 保存成功 %s\r\n", url, path)
 	}
 
+}
+
+// TransImages 翻译图片文本
+func (i *Image) TransImages() map[string][]map[string]string {
+	rets := make(map[string][]map[string]string)
+	for key, url := range i.Urls {
+		name := "pic_" + fmt.Sprintf("%04d", key)
+		imgs := ImageTrans(url)
+		if imgs != nil {
+			rets[name] = imgs
+		}
+	}
+	return rets
 }
 
 // ScaleImage 缩放图片

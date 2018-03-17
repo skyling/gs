@@ -39,9 +39,15 @@
 			"revisionTime": "2018-02-21T19:10:11Z"
 		},
 		{
+			"checksumSHA1": "rctG16V9ZQ23kiNnclZhiTG+ze0=",
+			"path": "github.com/tealeg/xlsx",
+			"revision": "d40e2bb185733dd4bc3c4a1929c35ee844ed3379",
+			"revisionTime": "2018-02-13T06:28:31Z"
+		},
+		{
 			"path": "golang.org/x/net/html",
 			"revision": ""
 		}
 	],
-	"rootPath": "gs"
+	"rootPath": "github.com/skyling/gs"
 }
