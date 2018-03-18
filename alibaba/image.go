@@ -61,19 +61,23 @@ func (i *Image) SetUrls(urls []string) *Image {
 
 // SaveImages 保存获取到的图片
 func (i *Image) SaveImages() {
+	saveUrls := []string{}
 	for key, url := range i.Urls {
-		i.SaveImage(fmt.Sprintf("%04d", key), url)
+		if i.SaveImage(fmt.Sprintf("%04d", key), url) {
+			saveUrls = append(saveUrls, url)
+		}
 	}
+	i.Urls = saveUrls
 }
 
 // SaveImage 保存图片到本地
-func (i *Image) SaveImage(key, url string) {
+func (i *Image) SaveImage(key, url string) bool {
 	res, err := http.Get(url)
 	defer res.Body.Close()
 	if err != nil {
 		fmt.Printf("%s 获取错误\r\n", url)
 		fmt.Println(err.Error())
-		return
+		return false
 	}
 	// 创建文件
 	os.MkdirAll(i.Root, os.ModePerm)
@@ -82,14 +86,14 @@ func (i *Image) SaveImage(key, url string) {
 	if err != nil {
 		fmt.Printf("%s 创建错误 %s\r\n", url, path)
 		fmt.Println(err.Error())
-		return
+		return false
 	}
 	// 生成文件
 	_, err = io.Copy(dst, res.Body)
 	if err != nil {
 		fmt.Printf("%s 保存错误 %s\r\n", url, path)
 		fmt.Println(err.Error())
-		return
+		return false
 	}
 	dst.Close()
 	p, err := os.Open(path)
@@ -111,7 +115,9 @@ func (i *Image) SaveImage(key, url string) {
 			i.ScaleImage(path, 800) // 主图小于800 的
 		}
 		fmt.Printf("%s 保存成功 %s\r\n", url, path)
+		return true
 	}
+	return false
 
 }
 

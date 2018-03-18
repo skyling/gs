@@ -72,10 +72,11 @@ func WriteGoodsInfo(goods []*alibaba.GoodsInfo) {
 	)
 	// 分类 中文名称 英文名称 SKU 零售价(美元) (成本+挂号费+批发运费+国际运费*重量)/汇率*(销售/成本) RMB成本 挂号费 汇率 批发运费 国际运费 预估重量 销售/成本 供应商链接 特征翻译 图片翻译
 	// A
-	title := []string{"分类", "中文名称", "英文名称", "零售价", "RMB成本", "挂号费", "汇率", "批发运费", "国际运费", "预估重量", "销售/成本", "供应商链接", "特征翻译"}
+	title := []string{"分类", "中文名称", "英文名称", "SKU", "零售价", "RMB成本", "挂号费", "汇率", "批发运费", "国际运费", "预估重量", "销售/成本", "供应商链接", "特征翻译"}
 	var data [][]string
 	data = append(data, title)
 	picTrans := make(map[string]interface{})
+	// fmt.Printf("%v\r\n", goods)
 	if len(goods) > 0 {
 		var rownum = 2
 		for _, v := range goods {
@@ -112,7 +113,7 @@ func WriteGoodsInfo(goods []*alibaba.GoodsInfo) {
 				v.Names[0],
 				v.Names[1],
 				v.SKU,
-				fmt.Sprintf("=(F%d+G%d+I%d+(J%d*K%d))/I%d*L%d", rownum, rownum, rownum, rownum, rownum, rownum, rownum),
+				fmt.Sprintf("=(F%d+G%d+I%d+(J%d*K%d))/H%d*L%d", rownum, rownum, rownum, rownum, rownum, rownum, rownum),
 				fmt.Sprintf("%f", v.Price),
 				fmt.Sprintf("%f", guahao),
 				fmt.Sprintf("%f", huilv),
@@ -154,9 +155,27 @@ func WriteGoodsInfo(goods []*alibaba.GoodsInfo) {
 			if err != nil {
 				fmt.Printf(err.Error())
 			}
-			data := jsoniter.ParseString(jsoniter.ConfigCompatibleWithStandardLibrary, tmpPics["detail"])
-			fmt.Printf(data.ReadString())
-			// TODO
+
+			data := jsoniter.ParseString(jsoniter.ConfigCompatibleWithStandardLibrary, tmpPics["detail"]).ReadAny()
+			// map[string][]map[string]string   source_text target_text
+			if len(data.Keys()) == 0 {
+				continue
+			}
+			for _, k := range data.Keys() {
+				pics := data.Get(k)
+				if pics.Size() == 0 {
+					continue
+				}
+				for i := 0; i < pics.Size(); i++ {
+					row = sheet.AddRow()
+					cell = row.AddCell()
+					cell.Value = k
+					cell = row.AddCell()
+					cell.Value = pics.Get(i).Get("source_text").ToString()
+					cell = row.AddCell()
+					cell.Value = pics.Get(i).Get("target_text").ToString()
+				}
+			}
 		}
 	}
 
