@@ -88,7 +88,7 @@ func (p *Page) GetGoodsInfo() *GoodsInfo {
 
 	freightInfo := p.ViewData.Get("freightInfo")
 	if freightInfo != nil {
-		goodsInfo.Weight = freightInfo.Get("unitWeight").ToFloat64() * 100
+		goodsInfo.Weight = freightInfo.Get("unitWeight").ToFloat64() * 1000
 	}
 
 	featureList := p.ViewData.Get("productFeatureList")

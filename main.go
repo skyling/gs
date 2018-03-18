@@ -84,7 +84,7 @@ func WriteGoodsInfo(goods []*alibaba.GoodsInfo) {
 				continue
 			}
 			guahao := float64(0)
-			if (float64(v.Price)+v.TotalCost/float64(v.BeginCount)+1+shipWeight*v.Weight/1000)/huilv*saler > 5 {
+			if (float64(v.Price)+v.TotalCost/float64(v.BeginCount)+1+shipWeight*(v.Weight+10)/1000)/huilv*saler > 5 {
 				guahao = 8
 			}
 			featureList := ""
