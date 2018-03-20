@@ -46,7 +46,7 @@ func main() {
 		}
 		line = strings.Trim(strings.Trim(line, "\n"), "\r")
 		params := strings.Split(line, " ")
-		if len(params) >= 2 {
+		if len(params) >= 2 && params[0] != "" {
 			sku, gid := params[0], params[1]
 			waitgroup.Add(1)
 			go func() {
@@ -76,7 +76,6 @@ func WriteGoodsInfo(goods []*alibaba.GoodsInfo) {
 	var data [][]string
 	data = append(data, title)
 	picTrans := make(map[string]interface{})
-	// fmt.Printf("%v\r\n", goods)
 	if len(goods) > 0 {
 		var rownum = 2
 		for _, v := range goods {

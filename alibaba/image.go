@@ -20,12 +20,13 @@ var (
 	// MinWidth 最小宽度
 	MinWidth = 350
 	// MinHeight 最小高度
-	MinHeight = 350
+	MinHeight = 200
 )
 
 // Image 图片
 type Image struct {
 	Urls     []string // URLs 图片地址
+	Paths    []string // Paths 保存路径
 	Root     string   // Root 保存图片根路径
 	Base     string   // 基础地址
 	IsDetail bool     // 是否为详情图片
@@ -109,6 +110,7 @@ func (i *Image) SaveImage(key, url string) bool {
 		p.Close()
 		os.Remove(path)
 	} else {
+		i.Paths = append(i.Paths, path)
 		if i.IsDetail {
 			i.ScaleImage(path, 960) // 详情图960
 		} else if c.Width < 800 {
@@ -124,9 +126,9 @@ func (i *Image) SaveImage(key, url string) bool {
 // TransImages 翻译图片文本
 func (i *Image) TransImages() map[string][]map[string]string {
 	rets := make(map[string][]map[string]string)
-	for key, url := range i.Urls {
+	for key, path := range i.Paths {
 		name := "pic_" + fmt.Sprintf("%04d", key)
-		imgs := ImageTrans(url)
+		imgs := ImageTrans(path)
 		if imgs != nil {
 			rets[name] = imgs
 		}
