@@ -113,7 +113,7 @@ func (i *Image) SaveImage(key, url string) bool {
 		i.Paths = append(i.Paths, path)
 		if i.IsDetail {
 			i.ScaleImage(path, 960) // 详情图960
-		} else if c.Width < 800 {
+		} else {
 			i.ScaleImage(path, 800) // 主图小于800 的
 		}
 		fmt.Printf("%s 保存成功 %s\r\n", url, path)
@@ -156,4 +156,5 @@ func (i *Image) ScaleImage(path string, width uint) {
 	defer out.Close()
 	jpeg.Encode(out, m, nil)
 	fmt.Println(path + " 图片大小改变成功")
+	os.Remove(path)
 }

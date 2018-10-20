@@ -5,3 +5,4 @@ gs.*
 *.xlsx
 /vendor/*
 !/vendor/vendor.json
+list.conf
