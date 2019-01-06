@@ -2,10 +2,13 @@ package alibaba
 
 import (
 	"fmt"
+	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/djimenez/iconv-go"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -15,6 +18,7 @@ type Page struct {
 	URL      string            // URL 地址
 	ViewData jsoniter.Any      // json 格式数据
 	Doc      *goquery.Document // Doc 获取到文档
+	DocHtml  string            // html文档
 }
 
 // GoodsInfo 商品信息
@@ -44,29 +48,47 @@ func NewPage(sku, url string) (*Page, error) {
 }
 
 // FetchDoc 从网页上获取到文档
-func (p *Page) fetchDoc() (*goquery.Document, error) {
-	doc, err := goquery.NewDocument(p.URL)
+func (p *Page) fetchDoc() (doc *goquery.Document, err error) {
+	fmt.Println("url", p.URL)
+	url := p.URL
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Add("cache-control", "no-cache")
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
+	utfBody, err := iconv.NewReader(res.Body, "gbk", "utf-8")
+	if err != nil {
+		return
+	}
+	doc, err = goquery.NewDocumentFromReader(utfBody)
+	if err != nil {
+		return
+	}
+	p.DocHtml, _ = doc.Html()
 	p.Doc = doc
 	return doc, nil
 }
 
 // GetViewData 获取商品数据
 func (p *Page) GetViewData() (*Page, error) {
-	html, _ := p.Doc.Html()
-	s := regexp.MustCompile(`window\.wingxViewData\[0\]=({.*}?)</script>`).FindStringSubmatch(html)
-	if len(s) < 2 {
-		return p, fmt.Errorf(p.SKU + " 详情获取失败")
-	}
-	p.ViewData = jsoniter.ParseString(jsoniter.ConfigFastest, s[1]).ReadAny()
+	// s := regexp.MustCompile(`window\.wingxViewData\[0\]=({.*}?)</script>`).FindStringSubmatch(p.DocHtml)
+	// if len(s) < 2 {
+	// 	return p, fmt.Errorf(p.SKU + " 详情获取失败")
+	// }
+	// p.ViewData = jsoniter.ParseString(jsoniter.ConfigFastest, s[1]).ReadAny()
 	return p, nil
 }
 
 // GetDetailURL 获取详细信息url
 func (p *Page) GetDetailURL() string {
-	return p.ViewData.Get("detailUrl").ToString()
+	s := regexp.MustCompile(`"detailUrl":\s*\"(.*)?"`).FindStringSubmatch(p.DocHtml)
+	// fmt.Println("detailUrl", s)
+	return s[1]
 }
 
 // GetGoodsInfo 获取商品信息
@@ -74,47 +96,47 @@ func (p *Page) GetGoodsInfo() *GoodsInfo {
 	goodsInfo := &GoodsInfo{}
 	goodsInfo.SKU = p.SKU
 	goodsInfo.DetailURL = strings.Replace(p.URL, "//m.", "//detail.", -1)
-	name := p.ViewData.Get("subject").ToString()
+	name := p.Doc.Find("title").Text()
 	goodsInfo.Names = []string{name, TextTrans(name)}
-	priceRange := p.ViewData.Get("priceRanges")
-	if priceRange.Size() > 0 {
-		goodsInfo.Price = priceRange.Get(0).Get("price").ToFloat64()
-		goodsInfo.BeginCount = priceRange.Get(0).Get("begin").ToUint()
+	// priceRange := p.ViewData.Get("priceRanges")
+	priceRange := p.Doc.Find("#widget-wap-detail-common-price").Find("script").Text()
+	// fmt.Print(priceRange)
+	priceJson := jsoniter.ParseString(jsoniter.ConfigDefault, priceRange).ReadAny()
+	if priceJson.Get("showPriceRanges").Size() > 0 {
+		goodsInfo.Price = priceJson.Get("showPriceRanges.price").ToFloat64()
+		goodsInfo.BeginCount = priceJson.Get("beginAmount").ToUint()
 	}
-	freightCost := p.ViewData.Get("freightCost")
-	if freightCost.Size() > 0 {
-		goodsInfo.TotalCost = freightCost.Get(0).Get("totalCost").ToFloat64()
+	freightCost := p.Doc.Find("#widget-wap-detail-common-logistics > div > div.takla-item-content > span:nth-child(2) > span:nth-child(3)").Text()
+	if freightCost != "" {
+		goodsInfo.TotalCost, _ = strconv.ParseFloat(freightCost, 64)
+	}
+	freightInfo := regexp.MustCompile(`data-offer-attribute-name=\"重量\"\s*data-offer-attribute-value=\"(.*)\"`).FindStringSubmatch(p.DocHtml)
+	if len(freightInfo) == 2 {
+		tmp, _ := strconv.ParseFloat(freightInfo[1], 64)
+		goodsInfo.Weight = tmp * 1000
 	}
 
-	freightInfo := p.ViewData.Get("freightInfo")
-	if freightInfo != nil {
-		goodsInfo.Weight = freightInfo.Get("unitWeight").ToFloat64() * 1000
-	}
-
-	featureList := p.ViewData.Get("productFeatureList")
-	for i := 0; i < featureList.Size(); i++ {
-		item := featureList.Get(i)
-		name, value := item.Get("name").ToString(), item.Get("value").ToString()
+	p.Doc.Find(".detail-attribute-item").Each(func(i int, d *goquery.Selection) {
+		name, _ := d.Attr("data-offer-attribute-name")
+		value, _ := d.Attr("data-offer-attribute-value")
 		goodsInfo.FeatureList = append(goodsInfo.FeatureList, map[string]string{
 			"name":    name,
 			"enname":  TextTrans(name),
 			"value":   value,
 			"envalue": TextTrans(value),
 		})
-	}
+	})
 	return goodsInfo
 }
 
 // GetCoverPics 获取封面图片url
 func (p *Page) GetCoverPics() (pics []string) {
-	imgs := p.ViewData.Get("imageList")
-
-	for i := 0; i < imgs.Size(); i++ {
-		img := imgs.Get(i)
-		uri := img.Get("originalImageURI").ToString()
-		if uri != "" {
-			pics = append(pics, uri)
+	p.Doc.Find("#J_Detail_ImageSlidesLayer").Find("img").Each(func(i int, d *goquery.Selection) {
+		src, exists := d.Attr("swipe-lazy-src")
+		if exists {
+			src = strings.Replace(src, "640x640", "800x800", 1)
+			pics = append(pics, src)
 		}
-	}
+	})
 	return pics
 }

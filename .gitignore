@@ -6,3 +6,4 @@ gs.*
 /vendor/*
 !/vendor/vendor.json
 list.conf
+.vscode
