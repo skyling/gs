@@ -9,9 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/encoding/simplifiedchinese"
+
 	"github.com/PuerkitoBio/goquery"
 	jsoniter "github.com/json-iterator/go"
-	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
 
@@ -73,9 +74,8 @@ func (p *Page) fetchDoc() (doc *goquery.Document, err error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	b, _ := ioutil.ReadAll(res.Body)
-	s, _ := GbkToUtf8(b)
-	doc, err = goquery.NewDocumentFromReader(bytes.NewReader(s))
+	utfBody := transform.NewReader(res.Body, simplifiedchinese.GBK.NewDecoder())
+	doc, err = goquery.NewDocumentFromReader(utfBody)
 	if err != nil {
 		return
 	}
@@ -113,7 +113,7 @@ func (p *Page) GetGoodsInfo() *GoodsInfo {
 	// fmt.Print(priceRange)
 	priceJson := jsoniter.ParseString(jsoniter.ConfigDefault, priceRange).ReadAny()
 	if priceJson.Get("showPriceRanges").Size() > 0 {
-		goodsInfo.Price = priceJson.Get("showPriceRanges.price").ToFloat64()
+		goodsInfo.Price = priceJson.Get("showPriceRanges").Get(0).Get("price").ToFloat64()
 		goodsInfo.BeginCount = priceJson.Get("beginAmount").ToUint()
 	}
 	freightCost := p.Doc.Find("#widget-wap-detail-common-logistics > div > div.takla-item-content > span:nth-child(2) > span:nth-child(3)").Text()
