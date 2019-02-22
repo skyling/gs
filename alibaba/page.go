@@ -1,15 +1,18 @@
 package alibaba
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/djimenez/iconv-go"
 	jsoniter "github.com/json-iterator/go"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 // Page 页面
@@ -33,6 +36,15 @@ type GoodsInfo struct {
 	DetailURL   string              // 地址信息
 	CoverPics   map[string][]map[string]string
 	DetailPics  map[string][]map[string]string
+}
+
+func GbkToUtf8(s []byte) ([]byte, error) {
+	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
+	d, e := ioutil.ReadAll(reader)
+	if e != nil {
+		return nil, e
+	}
+	return d, nil
 }
 
 // NewPage 新建页面
@@ -61,11 +73,9 @@ func (p *Page) fetchDoc() (doc *goquery.Document, err error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	utfBody, err := iconv.NewReader(res.Body, "gbk", "utf-8")
-	if err != nil {
-		return
-	}
-	doc, err = goquery.NewDocumentFromReader(utfBody)
+	b, _ := ioutil.ReadAll(res.Body)
+	s, _ := GbkToUtf8(b)
+	doc, err = goquery.NewDocumentFromReader(bytes.NewReader(s))
 	if err != nil {
 		return
 	}

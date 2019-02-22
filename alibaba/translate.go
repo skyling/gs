@@ -45,6 +45,7 @@ func Sign(params map[string]string) string {
 
 // ImageTrans 图片翻译
 func ImageTrans(path string) (rets []map[string]string) {
+	return nil
 	fbody, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil
@@ -78,6 +79,7 @@ func ImageTrans(path string) (rets []map[string]string) {
 
 // TextTrans 文本翻译
 func TextTrans(txt string) string {
+	return ""
 	params := getParams()
 	params["type"] = "1"
 	params["text"] = txt
