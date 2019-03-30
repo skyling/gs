@@ -8,3 +8,5 @@ gs.*
 list.conf
 .vscode
 history.conf
+*.json
+*.csv
