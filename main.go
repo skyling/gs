@@ -56,7 +56,7 @@ func main() {
 		}
 	}
 	waitgroup.Wait()
-	WriteGoodsInfo(goods)
+	// WriteGoodsInfo(goods)
 }
 
 func WriteGoodsInfo(goods []*alibaba.GoodsInfo) {
@@ -198,7 +198,7 @@ func Goods(sku, gid string) *alibaba.GoodsInfo {
 	imgURLs := page.GetCoverPics()
 	img := Img.CoverPath().SetUrls(imgURLs)
 	img.SaveImages()
-	info.CoverPics = img.TransImages()
+	// info.CoverPics = img.TransImages()
 	detailURL := page.GetDetailURL()
 	if detailURL != "" {
 		detailURL = "https:" + strings.Replace(strings.Replace(detailURL, "http:", "", -1), "https:", "", -1)
@@ -210,7 +210,7 @@ func Goods(sku, gid string) *alibaba.GoodsInfo {
 			fmt.Println(sku + " 详情图片")
 			dimg := Img.DetailPath().SetUrls(imgURLs)
 			dimg.SaveImages()
-			info.DetailPics = dimg.TransImages()
+			// info.DetailPics = dimg.TransImages()
 		}
 	}
 	return info
